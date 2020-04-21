@@ -1,0 +1,41 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ecomms_simple_influxdb_service", "ecomms_simple_influxdb_service\ecomms_simple_influxdb_service.csproj", "{75D345DB-B066-446B-B4CF-F0536CA3D538}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECOMMS_Client", "..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Client\ECOMMS_Client.csproj", "{C3071D82-1070-4131-A370-782B5E440209}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECOMMS_Entity", "..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Entity\ECOMMS_Entity.csproj", "{9EE295AD-BF67-4504-9A85-F5D1E42C8890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECOMMS_Manager", "..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Manager\ECOMMS_Manager.csproj", "{747EDA6A-33C1-4CD2-97E2-01942332A6D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECOMMS_Participant", "..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Participant\ECOMMS_Participant.csproj", "{14FBB2E0-CE41-48FE-8AFB-A9DED07B1FE0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{75D345DB-B066-446B-B4CF-F0536CA3D538}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75D345DB-B066-446B-B4CF-F0536CA3D538}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75D345DB-B066-446B-B4CF-F0536CA3D538}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75D345DB-B066-446B-B4CF-F0536CA3D538}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3071D82-1070-4131-A370-782B5E440209}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3071D82-1070-4131-A370-782B5E440209}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3071D82-1070-4131-A370-782B5E440209}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3071D82-1070-4131-A370-782B5E440209}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EE295AD-BF67-4504-9A85-F5D1E42C8890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EE295AD-BF67-4504-9A85-F5D1E42C8890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EE295AD-BF67-4504-9A85-F5D1E42C8890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EE295AD-BF67-4504-9A85-F5D1E42C8890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{747EDA6A-33C1-4CD2-97E2-01942332A6D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{747EDA6A-33C1-4CD2-97E2-01942332A6D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{747EDA6A-33C1-4CD2-97E2-01942332A6D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{747EDA6A-33C1-4CD2-97E2-01942332A6D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14FBB2E0-CE41-48FE-8AFB-A9DED07B1FE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14FBB2E0-CE41-48FE-8AFB-A9DED07B1FE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14FBB2E0-CE41-48FE-8AFB-A9DED07B1FE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14FBB2E0-CE41-48FE-8AFB-A9DED07B1FE0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
