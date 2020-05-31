@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.0" />
-    <PackageReference Include="InfluxDB.Collector" Version="1.1.0" />
+    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.1" />
+    <PackageReference Include="InfluxDB.Collector" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Client\ECOMMS_Client.csproj" />

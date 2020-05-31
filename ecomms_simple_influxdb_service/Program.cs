@@ -70,7 +70,7 @@ namespace ecomms_simple_influxdb_service
             var payload = new LineProtocolPayload();
             payload.Add(cpuTime);
 
-            var influx = new LineProtocolClient(new Uri("http://192.168.86.30:8086"), "firstdb");
+            var influx = new LineProtocolClient(new Uri("http://192.168.86.31:9999"), "firstdb");
             var influxResult = await influx.WriteAsync(payload);
 
             if (!influxResult.Success)
@@ -85,9 +85,9 @@ namespace ecomms_simple_influxdb_service
 
                 Console.WriteLine(client.name + " SENSOR ADDED");
 
-                if (!_sensorNames.Contains(client.name))
+                if (!_sensorNames.Contains(client.id))
                 {
-                    _sensorNames.Add(client.name);
+                    _sensorNames.Add(client.id);
                     _sensorDataList.Add(new SensorData());
                     _sensorDictionary.Add(client.name, new SensorData());
 
@@ -129,7 +129,7 @@ namespace ecomms_simple_influxdb_service
 
                             if (!me.online)
                             {
-                                _sensorNames.Remove(me.name);
+                                _sensorNames.Remove(me.id);
                             }
                         }
                     }));
@@ -188,7 +188,7 @@ namespace ecomms_simple_influxdb_service
             _manager = new Manager();
 
             //consider supporting nats list
-            _manager.connect(@"nats://192.168.86.30:4222"); //.27 rPi, .30 maclinbook
+            _manager.connect(@"nats://192.168.86.31:7222"); //.27 rPi, .30 maclinbook
             _manager.init();
 
             //addobserver(observerex) notifies with data which is the added client in this case
@@ -200,7 +200,7 @@ namespace ecomms_simple_influxdb_service
                 //WIP...
 
                 var client = c as IClient;
-                Thread.Sleep(3000);
+
                 switch (h)
                 {
                     case "CONNECTED":
