@@ -10,9 +10,9 @@
     <PackageReference Include="InfluxDB.Collector" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Client\ECOMMS_Client.csproj" />
-    <ProjectReference Include="..\..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Entity\ECOMMS_Entity.csproj" />
-    <ProjectReference Include="..\..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Manager\ECOMMS_Manager.csproj" />
-    <ProjectReference Include="..\..\..\..\..\Users\sne\Dev\TA Enterprise Communications\ECOMMS_Participant\ECOMMS_Participant.csproj" />
+    <ProjectReference Include="..\..\ecomms\ECOMMS_Client\ECOMMS_Client.csproj" />
+    <ProjectReference Include="..\..\ecomms\ECOMMS_Entity\ECOMMS_Entity.csproj" />
+    <ProjectReference Include="..\..\ecomms\ECOMMS_Manager\ECOMMS_Manager.csproj" />
+    <ProjectReference Include="..\..\ecomms\ECOMMS_Participant\ECOMMS_Participant.csproj" />
   </ItemGroup>
 </Project>

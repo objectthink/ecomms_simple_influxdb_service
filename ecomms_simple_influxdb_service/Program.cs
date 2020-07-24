@@ -11,6 +11,7 @@ using System.Text.Json;
 using InfluxDB.Collector;
 using InfluxDB.LineProtocol.Client;
 using InfluxDB.LineProtocol.Payload;
+using System.Linq;
 
 namespace ecomms_simple_influxdb_service
 {
@@ -39,6 +40,55 @@ namespace ecomms_simple_influxdb_service
         public float level { get; set; }
     }
 
+    public class InstrumentStatus
+    {
+        public string StatusType { get; set; }
+    }
+    public class InstrumentDataStatus
+    {
+        public string StatusType { get; set; }
+        public InstrumentFloatData FloatData { get; set; }
+        public int PtIndex { get; set; }
+    }
+
+    public class InstrumentFloatData
+    {
+        public float AlphaData { get; set; }
+        public float DeltaLengthData { get; set; }
+        public float DynComplMagData { get; set; }
+        public float DynComplPhaseData { get; set; }
+        public float DynNormalForce { get; set; }
+        public float DynNormalMagData { get; set; }
+        public float DynNormalPhaseData { get; set; }
+        public float DynRateData { get; set; }
+        public float DynStrainCmdData { get; set; }
+        public float DynStrainMagData { get; set; }
+        public float DynStrainPhaseData { get; set; }
+        public float DynTorqueMagData { get; set; }
+        public float DynTorquePhaseData { get; set; }
+        public float SampleGapData { get; set; }
+        public float ScaleNormWaveData { get; set; }
+        public float ScaleStrnWaveData { get; set; }
+        public float ScaleTorqWaveData { get; set; }
+        public float StaticTensionZData { get; set; }
+        public float StdyTorqueMagData { get; set; }
+        public float SteadyRateData { get; set; }
+        public float TempData { get; set; }
+        public float TimeData { get; set; }
+    }
+
+    public class InstrumentRealtimeStatus
+    {
+        public string StatusType { get; set; }
+        public InstrumentSignal[] Signals {get; set;}
+    }
+
+    public class InstrumentSignal
+    {
+        public string Name { get; set; }
+        public string Units { get; set; }
+        public string Value { get; set; }
+    }
 
     class Program
     {
@@ -46,6 +96,11 @@ namespace ecomms_simple_influxdb_service
         static List<SensorData> _sensorDataList = new List<SensorData>();
         static Dictionary<string, SensorData> _sensorDictionary = new Dictionary<string, SensorData>();
 
+        /// <summary>
+        /// add sensor point
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="status"></param>
         private async static void add(IClient client, string status)
         {
             SensorDataPoint sdp = JsonSerializer.Deserialize<SensorDataPoint>(status);
@@ -70,7 +125,7 @@ namespace ecomms_simple_influxdb_service
             var payload = new LineProtocolPayload();
             payload.Add(cpuTime);
 
-            var influx = new LineProtocolClient(new Uri("http://192.168.86.31:9999"), "firstdb");
+            var influx = new LineProtocolClient(new Uri("http://192.168.86.27:8086"), "first");
             var influxResult = await influx.WriteAsync(payload);
 
             if (!influxResult.Success)
@@ -212,10 +267,135 @@ namespace ecomms_simple_influxdb_service
 
                             addSensor(client);
                         }
+
+                        if(client.role == Role.Instrument)
+                        {
+                            addInstrument(client);
+                        }
                         break;
                 }
 
             }));
         }
+
+        private static void addInstrument(IClient client)
+        {
+            if (client.role == Role.Instrument)
+            {
+                Console.WriteLine(" INSTRUMENT CONNECTED {0}", client.name);
+
+                //add a status listener
+                client.addStatusListener((name, bytes) =>
+                {
+                    //Console.WriteLine("{0}:status listener:{1}:{2}",
+                    //    client.name,
+                    //    name,
+                    //    Encoding.UTF8.GetString(bytes, 0, bytes.Length));
+
+                    addInstrumentDataPoint(client, Encoding.UTF8.GetString(bytes, 0, bytes.Length));
+                });
+            }
+        }
+
+        private async static void addInstrumentDataPoint(IClient client, string status)
+        {
+            InstrumentStatus sdp = JsonSerializer.Deserialize<InstrumentStatus>(status);
+
+            Console.WriteLine(sdp.StatusType);
+
+            //do something with data status
+            if(sdp.StatusType.Equals("Data"))
+            {
+                InstrumentDataStatus dataStatus = JsonSerializer.Deserialize<InstrumentDataStatus>(status);
+
+                Console.WriteLine(status);
+
+                var point = new LineProtocolPoint(
+                    "experiments",
+                    new Dictionary<string, object>
+                    {
+                        { "AlphaData"       , dataStatus.FloatData.AlphaData },
+                        { "DeltaLengthData" , dataStatus.FloatData.DeltaLengthData },
+                        { "DynComplMagData"       , dataStatus.FloatData.DynComplMagData },
+                        { "DynComplPhaseData"       , dataStatus.FloatData.DynComplPhaseData },
+                        { "DynNormalForce"       , dataStatus.FloatData.DynNormalForce },
+                        { "DynNormalMagData"       , dataStatus.FloatData.DynNormalMagData },
+                        { "DynNormalPhaseData"       , dataStatus.FloatData.DynNormalPhaseData },
+                        { "DynRateData"       , dataStatus.FloatData.DynRateData },
+                        { "DynStrainCmdData"       , dataStatus.FloatData.DynStrainCmdData },
+                        { "DynStrainMagData"       , dataStatus.FloatData.DynStrainMagData },
+                        { "DynStrainPhaseData"       , dataStatus.FloatData.DynStrainPhaseData },
+                        { "DynTorqueMagData"       , dataStatus.FloatData.DynTorqueMagData },
+                        { "DynTorquePhaseData"       , dataStatus.FloatData.DynTorquePhaseData },
+                        { "SampleGapData"       , dataStatus.FloatData.SampleGapData },
+                        { "ScaleNormWaveData"       , dataStatus.FloatData.ScaleNormWaveData },
+                        { "ScaleStrnWaveData"       , dataStatus.FloatData.ScaleStrnWaveData },
+                        { "ScaleTorqWaveData"       , dataStatus.FloatData.ScaleTorqWaveData },
+                        { "StaticTensionZData"       , dataStatus.FloatData.StaticTensionZData },
+                        { "StdyTorqueMagData"       , dataStatus.FloatData.StdyTorqueMagData },
+                        { "SteadyRateData"       , dataStatus.FloatData.SteadyRateData },
+                        { "TempData"       , dataStatus.FloatData.TempData },
+                        { "TimeData"       , dataStatus.FloatData.TimeData },
+                    },
+
+                    new Dictionary<string, string>
+                    {
+                        { "instrument", client.name },
+                        { "experiment", "ID GOES HERE!" }
+                    },
+
+                    DateTime.UtcNow);
+
+                var payload = new LineProtocolPayload();
+                payload.Add(point);
+
+                var influx = new LineProtocolClient(new Uri("http://192.168.86.27:8086"), "first");
+                var influxResult = await influx.WriteAsync(payload);
+
+                if (!influxResult.Success)
+                    Console.Error.WriteLine(influxResult.ErrorMessage);
+            }
+
+            if (sdp.StatusType.Equals("RealTime"))
+            {
+                Dictionary<string, object> signals = new Dictionary<string, object>();
+
+                InstrumentRealtimeStatus dataStatus = JsonSerializer.Deserialize<InstrumentRealtimeStatus>(status);
+
+                Console.WriteLine(status);
+                foreach(InstrumentSignal signal in dataStatus.Signals)
+                {
+                    Console.WriteLine("{0} {1} {2}",
+                        signal.Name,
+                        signal.Value,
+                        signal.Units);
+
+                    if(!signals.Keys.Contains(signal.Name))
+                        signals.Add(signal.Name, signal.Value);
+                }
+
+                var point = new LineProtocolPoint(
+                    "instruments",
+                    signals,
+
+                    new Dictionary<string, string>
+                    {
+                        { "instrument", client.name }
+                    },
+
+                    DateTime.UtcNow);
+
+                var payload = new LineProtocolPayload();
+                payload.Add(point);
+
+                var influx = new LineProtocolClient(new Uri("http://192.168.86.27:8086"), "first");
+                var influxResult = await influx.WriteAsync(payload);
+
+                if (!influxResult.Success)
+                    Console.Error.WriteLine(influxResult.ErrorMessage);
+
+            }
+        }
+
     }
 }
