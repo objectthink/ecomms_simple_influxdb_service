@@ -12,10 +12,12 @@ using InfluxDB.Collector;
 using InfluxDB.LineProtocol.Client;
 using InfluxDB.LineProtocol.Payload;
 using System.Linq;
+using ECOMMS_Participant;
+using NATS.Client;
+using InfluxDB.Client;
 
 namespace ecomms_simple_influxdb_service
 {
-    //copied from ecomms_io solution until i create a shared project
     public class SensorData
     {
         public String name { get; set; }
@@ -32,7 +34,6 @@ namespace ecomms_simple_influxdb_service
         }
     }
 
-    //copied from ecomms_io solution until i create a shared project
     public class SensorDataPoint
     {
         public int temperature { get; set; }
@@ -44,6 +45,7 @@ namespace ecomms_simple_influxdb_service
     {
         public string StatusType { get; set; }
     }
+
     public class InstrumentDataStatus
     {
         public string StatusType { get; set; }
@@ -80,7 +82,7 @@ namespace ecomms_simple_influxdb_service
     public class InstrumentRealtimeStatus
     {
         public string StatusType { get; set; }
-        public InstrumentSignal[] Signals {get; set;}
+        public InstrumentSignal[] Signals { get; set; }
     }
 
     public class InstrumentSignal
@@ -90,18 +92,61 @@ namespace ecomms_simple_influxdb_service
         public string Value { get; set; }
     }
 
-    class Program
+    public class PersistentStoreService : ServiceParticipant
     {
-        static List<string> _sensorNames = new List<string>();
-        static List<SensorData> _sensorDataList = new List<SensorData>();
-        static Dictionary<string, SensorData> _sensorDictionary = new Dictionary<string, SensorData>();
+        List<string> _sensorNames = new List<string>();
+        List<SensorData> _sensorDataList = new List<SensorData>();
+        Dictionary<string, SensorData> _sensorDictionary = new Dictionary<string, SensorData>();
+
+        public PersistentStoreService(
+            string id) : base(id, ECOMMS_Entity.Type.PersistentStore)
+        {
+        }
+
+        public async override void get(string what, Msg message)
+        {
+            //influxdb query example
+            char[] Token = "".ToCharArray();
+            var influxDBClient = InfluxDBClientFactory.Create("http://192.168.86.27:8086", Token);
+
+            switch (what)
+            {
+                case "sensorsNamesList":
+                    //influxdb query
+
+                    //create a string from the last minutes worth of data in all tables
+                    string data = "";
+                    var flux = "from(bucket:\"first\") |> range(start: -1m)";
+
+                    var fluxTables = await influxDBClient.GetQueryApi().QueryAsync(flux, "sensors");
+                    fluxTables.ForEach(fluxTable =>
+                    {
+                        var fluxRecords = fluxTable.Records;
+                        fluxRecords.ForEach(fluxRecord =>
+                        {
+                            //Console.WriteLine($"{fluxRecord.GetTime()}: {fluxRecord.GetValue()}");
+                            data += $"{fluxRecord.GetTime()}: {fluxRecord.GetValue()}";
+                        });
+                    });
+
+                    influxDBClient.Dispose();                    ////////////////
+
+                    //send reply
+                    replyTo(message, data);
+                    break;
+                default:
+                    //not handled
+                    base.get(what, message);
+                    break;
+            }
+        }
 
         /// <summary>
         /// add sensor point
         /// </summary>
         /// <param name="client"></param>
         /// <param name="status"></param>
-        private async static void add(IClient client, string status)
+        private async void add(IClient client, string status)
         {
             SensorDataPoint sdp = JsonSerializer.Deserialize<SensorDataPoint>(status);
 
@@ -133,7 +178,7 @@ namespace ecomms_simple_influxdb_service
         }
 
         //add a sensor to our list of sensors
-        private static void addSensor(IClient client)
+        private void addSensor(IClient client)
         {
             if (client.role == Role.Sensor)
             {
@@ -206,79 +251,7 @@ namespace ecomms_simple_influxdb_service
             }
         }
 
-        static async System.Threading.Tasks.Task Main(string[] args)
-        {
-            Console.WriteLine("hello cruel world");
-
-            //ECOMMS Manager
-            Manager _manager;
-
-            //ADD INFLUX RECORDS TEST
-
-            /*
-            var cpuTime = new LineProtocolPoint(
-                "working_set",
-                new Dictionary<string, object>
-                {
-                    { "value", 77 },
-                },
-                new Dictionary<string, string>
-                {
-                    { "host", Environment.GetEnvironmentVariable("COMPUTERNAME") }
-                },
-                DateTime.UtcNow);
-
-            var payload = new LineProtocolPayload();
-            payload.Add(cpuTime);
-
-            var client = new LineProtocolClient(new Uri("http://192.168.86.30:8086"), "firstdb");
-            var influxResult = await client.WriteAsync(payload);
-            if (!influxResult.Success)
-                Console.Error.WriteLine(influxResult.ErrorMessage);
-            */
-
-            ////////////////////////
-
-            //SETUP ECOMMS MANAGER AND START LISTENING TO CLIENT LIST CHANGES
-            _manager = new Manager();
-
-            //consider supporting nats list
-            _manager.connect(@"nats://192.168.86.31:7222"); //.27 rPi, .30 maclinbook
-            _manager.init();
-
-            //addobserver(observerex) notifies with data which is the added client in this case
-            _manager.addObserver(new ObserverAdapterEx((o, h, c) =>
-            {
-                //need to wait to notify until after base class has gotton response
-                //to role request
-                //or have library query first before creating client
-                //WIP...
-
-                var client = c as IClient;
-
-                switch (h)
-                {
-                    case "CONNECTED":
-
-                        if (client.role == Role.Sensor)
-                        {
-
-                            Console.WriteLine(client.name + " SENSOR CONNECTED");
-
-                            addSensor(client);
-                        }
-
-                        if(client.role == Role.Instrument)
-                        {
-                            addInstrument(client);
-                        }
-                        break;
-                }
-
-            }));
-        }
-
-        private static void addInstrument(IClient client)
+        private void addInstrument(IClient client)
         {
             if (client.role == Role.Instrument)
             {
@@ -297,14 +270,14 @@ namespace ecomms_simple_influxdb_service
             }
         }
 
-        private async static void addInstrumentDataPoint(IClient client, string status)
+        private async void addInstrumentDataPoint(IClient client, string status)
         {
             InstrumentStatus sdp = JsonSerializer.Deserialize<InstrumentStatus>(status);
 
             Console.WriteLine(sdp.StatusType);
 
             //do something with data status
-            if(sdp.StatusType.Equals("Data"))
+            if (sdp.StatusType.Equals("Data"))
             {
                 InstrumentDataStatus dataStatus = JsonSerializer.Deserialize<InstrumentDataStatus>(status);
 
@@ -363,14 +336,14 @@ namespace ecomms_simple_influxdb_service
                 InstrumentRealtimeStatus dataStatus = JsonSerializer.Deserialize<InstrumentRealtimeStatus>(status);
 
                 Console.WriteLine(status);
-                foreach(InstrumentSignal signal in dataStatus.Signals)
+                foreach (InstrumentSignal signal in dataStatus.Signals)
                 {
                     Console.WriteLine("{0} {1} {2}",
                         signal.Name,
                         signal.Value,
                         signal.Units);
 
-                    if(!signals.Keys.Contains(signal.Name))
+                    if (!signals.Keys.Contains(signal.Name))
                         signals.Add(signal.Name, signal.Value);
                 }
 
@@ -397,5 +370,84 @@ namespace ecomms_simple_influxdb_service
             }
         }
 
+        public override void init()
+        {
+            base.init();
+
+            //ECOMMS Manager
+            Manager _manager;
+
+            ////////////////////////
+
+            //SETUP ECOMMS MANAGER AND START LISTENING TO CLIENT LIST CHANGES
+            _manager = new Manager();
+
+            //consider supporting nats list
+            _manager.connect(@"nats://192.168.86.31:7222"); //.27 rPi, .30 maclinbook
+            _manager.init();
+
+            //addobserver(observerex) notifies with data which is the added client in this case
+            _manager.addObserver(new ObserverAdapterEx((o, h, c) =>
+            {
+                //need to wait to notify until after base class has gotton response
+                //to role request
+                //or have library query first before creating client
+                //WIP...
+
+                var client = c as IClient;
+
+                switch (h)
+                {
+                    case "CONNECTED":
+
+                        if (client.role == Role.Sensor)
+                        {
+
+                            Console.WriteLine(client.name + " SENSOR CONNECTED");
+
+                            addSensor(client);
+                        }
+
+                        if (client.role == Role.Instrument)
+                        {
+                            addInstrument(client);
+                        }
+                        break;
+                }
+
+            }));
+        }
+    }
+
+    class Program
+    {
+        static int Main(string[] args)
+        {
+            Console.WriteLine("hello cruel world");
+
+            //unique id
+            var id = Guid.NewGuid().ToString();
+
+            //create persistent store service instance
+            PersistentStoreService service = new PersistentStoreService(id);
+            service.connect(@"nats://192.168.86.31:7222");
+            service.init();
+
+            //TEST PESISTENT STORE GET REQUEST
+            //CLIENT WOULD BE ACQUIRED IN CLIENT APPLICATION USING MANAGER
+            var serviceClient = new Client(id, Role.Service, ECOMMS_Entity.Type.PersistentStore);
+            serviceClient.connect(@"nats://192.168.86.31:7222");
+            serviceClient.init();
+
+            //test get
+            serviceClient.doGet("sensorsNamesList", (s) =>
+            {
+                Console.WriteLine("persistent store service returned:" + s);
+            });
+
+            //////////////////////////////////
+
+            return 0;
+        }
     }
 }
